@@ -1,0 +1,23 @@
+{
+  "name": "financemasterfrontende",
+  "version": "1.0.0",
+  "description": "Font End filmes of the FinanceMaster",
+  "homepage": "https://github.com/KoljaSchollmeyer/FinanceMasterFrontEnde#readme",
+  "bugs": {
+    "url": "https://github.com/KoljaSchollmeyer/FinanceMasterFrontEnde/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KoljaSchollmeyer/FinanceMasterFrontEnde.git"
+  },
+  "license": "ISC",
+  "author": "Kolja Schollmeyer and Tomer Gonen",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0"
+  }
+}
