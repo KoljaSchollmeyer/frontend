@@ -14,7 +14,13 @@
   "author": "Kolja Schollmeyer and Tomer Gonen",
   "type": "commonjs",
   "main": "index.js",
+  "jest": {
+    "testPathIgnorePatterns": [
+      "<rootDir>/vue-project/"
+    ]
+  },
   "scripts": {
+    "dev": "npm --prefix ./FinanceMaster run dev",
     "test": "jest"
   },
   "devDependencies": {

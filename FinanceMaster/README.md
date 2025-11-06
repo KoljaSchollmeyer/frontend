@@ -1,38 +1,15 @@
-# FinanceMaster
+# WebTech WiSe25/26 – Gruppenarbeit
 
-This template should help get you started developing with Vue 3 in Vite.
+Team Mitglieder: Tomer Gonen, Kolja Schollmeyer. 
 
-## Recommended IDE Setup
+Zum Frontend-Repository: https://github.com/tomergonen2002/FinanceMaster
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+### Milestones
 
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
+| Milestones                    | Inhalt                                                                                                            |                                                        Deadline |
+|-------------------------------|-------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------:|
+| M1 — Thema & Setup            | Thema überlegen, Paar gefunden, GitHub‑Repo erstellt, erste Entity‑Klasse, einfache Spring Boot App mit GET‑Route |                                                     19. Oktober |
+| M2 — Frontend‑Basis           | Vue.js‑App zu GitHub gepusht; mind. 1 eigene Unterkomponente, die mit v‑for rendert                               |                                                     9. November |
+| M3 — Deployment & Integration | Frontend und Backend auf Render deployed; Frontend ruft eine GET‑Route auf                                        |                                                    23. November |
+| M4 — Persistenz & POST        | Backend bietet REST‑Schnittstelle und persistiert Daten in Postgres; Frontend ruft POST‑Route auf                 |                                                    14. Dezember |
+| Finale Projekt‑Präsentation   | Präsentationswoche (Präsentation in der Übung) — finale Abgabe: Repo/Readme/Deployment                            | 18. Januar, 23:59 Uhr (Frühere Präsentationswoche: 19.–23. Jan) |
