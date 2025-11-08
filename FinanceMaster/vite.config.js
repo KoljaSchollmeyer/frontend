@@ -4,15 +4,16 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    vue(),
-    vueDevTools(),
-  ],
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    },
-  },
-})
+  plugins: [vue()],
+  server: {
+    proxy: {
+      // Leitet alle /api Anfragen im Dev an das Backend weiter
+      '/api': {
+        target: 'https://financemaster-8cou.onrender.com',
+        changeOrigin: true,
+        secure: true
+      }
+    }
+  }
+});
