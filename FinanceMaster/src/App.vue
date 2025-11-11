@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import CategoryList from './components/CategoryList.vue'
 import TransactionList from './components/TransactionList.vue'
+import SignupForm from './components/SignupForm.vue'
 import { apiGet, apiPost } from './api.js'
 
 // Load data only from backend; no example data in FE
@@ -13,6 +14,9 @@ const loadingCategories = ref(false)
 const loadingTransactions = ref(false)
 const errorCategories = ref('')
 const errorTransactions = ref('')
+
+// simple view state: 'app' | 'signup'
+const view = ref('app')
 
 async function fetchCategories() {
   loadingCategories.value = true
@@ -63,28 +67,38 @@ function addCategory(payload) {
 async function addTransaction(payload) {
   // POST to backend and update local list with returned entity; fallback to local push
   try {
-    // Ensure backend receives a Category object (not just a string)
+    // Ensure backend receives a Category reference by id only
     const body = {
       type: payload.type,
       amount: parseFloat(payload.amount),
       description: payload.description,
       date: payload.date,
-      category: typeof payload.category === 'string' && payload.category
-        ? { name: payload.category }
-        : payload.category
+      category: typeof payload.categoryId === 'number' || (typeof payload.categoryId === 'string' && payload.categoryId)
+        ? { id: Number(payload.categoryId) }
+        : undefined
     }
     await apiPost('/transactions', body)
     // re-fetch to ensure state matches server (ids, normalization)
     await fetchTransactions()
   } catch (e) {
     console.warn('Failed to save transaction to API, using local only', e)
-    transactions.value.push({ id: Date.now(), date: payload.date, description: payload.description, category: payload.category, type: payload.type, amount: parseFloat(payload.amount) })
+    const cat = categories.value.find(c => c.id === Number(payload.categoryId))
+    transactions.value.push({ id: Date.now(), date: payload.date, description: payload.description, category: cat?.name || '', type: payload.type, amount: parseFloat(payload.amount) })
   }
+}
+
+function signedUp(user) {
+  // After signup we could refresh users list if we had one displayed.
+  view.value = 'app'
 }
 </script>
 
 <template>
-  <main class="container">
+  <nav style="margin-bottom:1rem; display:flex; gap:1rem;">
+    <a href="#" @click.prevent="view = 'app'">App</a>
+    <a href="#" @click.prevent="view = 'signup'">Registrieren</a>
+  </nav>
+  <main class="container" v-if="view === 'app'">
     <h1>Willkommen zu FinanceMaster!</h1>
 
     <section class="section-categories">
@@ -105,4 +119,7 @@ async function addTransaction(payload) {
       />
     </section>
   </main>
+  <div v-else-if="view === 'signup'">
+    <SignupForm @signed-up="signedUp" />
+  </div>
 </template>

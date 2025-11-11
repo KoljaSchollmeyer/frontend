@@ -7,7 +7,7 @@ const emit = defineEmits(['add-transaction'])
 const form = reactive({
   date: new Date().toISOString().slice(0, 10),
   description: '',
-  category: '',
+  categoryId: '', // holds selected category id
   type: 'expense',
   amount: ''
 })
@@ -17,7 +17,7 @@ const categoryError = ref('')
 function resetForm() {
   form.date = new Date().toISOString().slice(0, 10)
   form.description = ''
-  form.category = ''
+  form.categoryId = ''
   form.type = 'expense'
   form.amount = ''
   categoryError.value = ''
@@ -26,9 +26,9 @@ function resetForm() {
 function addTransaction() {
   categoryError.value = ''
   const description = form.description.trim()
-  const category = form.category
+  const categoryId = form.categoryId
   const amount = Number(form.amount)
-  if (!category) {
+  if (!categoryId) {
     categoryError.value = 'Bitte eine Kategorie wählen.'
     return
   }
@@ -37,7 +37,7 @@ function addTransaction() {
   emit('add-transaction', {
     date: form.date,
     description,
-    category,
+    categoryId,
     type: form.type,
     amount
   })
@@ -90,9 +90,9 @@ function addTransaction() {
       </label>
       <label>
         Kategorie
-        <select v-model="form.category" aria-label="Kategorie">
+        <select v-model="form.categoryId" aria-label="Kategorie">
           <option value="">-- wählen --</option>
-          <option v-for="c in categories" :key="c.id" :value="c.name">{{ c.name }}</option>
+          <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
         </select>
         <div v-if="categoryError" class="error" role="alert" aria-live="polite">{{ categoryError }}</div>
       </label>
