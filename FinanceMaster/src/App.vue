@@ -8,27 +8,43 @@ import { apiGet, apiPost } from './api.js'
 const categories = ref([])
 const transactions = ref([])
 
+// loading and error state
+const loadingCategories = ref(false)
+const loadingTransactions = ref(false)
+const errorCategories = ref('')
+const errorTransactions = ref('')
+
 async function fetchCategories() {
-  const data = await apiGet('/categories')
-  categories.value = (data || []).map((c, i) => ({ id: c.id ?? i + 1, name: c.name, description: c.description }))
+  loadingCategories.value = true
+  errorCategories.value = ''
+  try {
+    const data = await apiGet('/categories')
+    categories.value = (data || []).map((c, i) => ({ id: c.id ?? i + 1, name: c.name, description: c.description }))
+  } catch (err) {
+    errorCategories.value = 'Kategorien konnten nicht geladen werden. Bitte später erneut versuchen.'
+    categories.value = []
+  } finally {
+    loadingCategories.value = false
+  }
 }
 
 async function fetchTransactions() {
-  const tx = await apiGet('/transactions')
-  transactions.value = (tx || []).map((t, i) => ({ id: t.id ?? i + 1, date: t.date, description: t.description, category: t.category?.name || t.category || '', type: t.type, amount: t.amount }))
+  loadingTransactions.value = true
+  errorTransactions.value = ''
+  try {
+    const tx = await apiGet('/transactions')
+    transactions.value = (tx || []).map((t, i) => ({ id: t.id ?? i + 1, date: t.date, description: t.description, category: t.category?.name || t.category || '', type: t.type, amount: t.amount }))
+  } catch (err) {
+    errorTransactions.value = 'Transaktionen konnten nicht geladen werden. Bitte später erneut versuchen.'
+    transactions.value = []
+  } finally {
+    loadingTransactions.value = false
+  }
 }
 
 onMounted(async () => {
-  try {
-    await fetchCategories()
-  } catch (err) {
-    console.warn('Failed to load categories from API, keeping empty', err)
-  }
-  try {
-    await fetchTransactions()
-  } catch (e) {
-    console.warn('Failed to load transactions from API, keeping empty', e)
-  }
+  await fetchCategories()
+  await fetchTransactions()
 })
 
 function addCategory(payload) {
@@ -72,10 +88,16 @@ async function addTransaction(payload) {
     <h1>Willkommen zu FinanceMaster!</h1>
 
     <section class="section-categories">
+      <div v-if="loadingCategories" class="info">Lade Kategorien…</div>
+      <div v-else-if="errorCategories" class="error" role="alert" aria-live="polite">{{ errorCategories }}</div>
+      <div v-else-if="!categories.length" class="muted">Keine Kategorien vorhanden – zuerst anlegen.</div>
       <CategoryList :categories="categories" @add-category="addCategory" />
     </section>
 
     <section class="section-transactions">
+      <div v-if="loadingTransactions" class="info">Lade Transaktionen…</div>
+      <div v-else-if="errorTransactions" class="error" role="alert" aria-live="polite">{{ errorTransactions }}</div>
+      <div v-else-if="!transactions.length" class="muted">Noch keine Transaktionen.</div>
       <TransactionList
         :categories="categories"
         :transactions="transactions"

@@ -1,5 +1,5 @@
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 
 const props = defineProps({ categories: Array, transactions: Array })
 const emit = defineEmits(['add-transaction'])
@@ -12,19 +12,27 @@ const form = reactive({
   amount: ''
 })
 
+const categoryError = ref('')
+
 function resetForm() {
   form.date = new Date().toISOString().slice(0, 10)
   form.description = ''
   form.category = ''
   form.type = 'expense'
   form.amount = ''
+  categoryError.value = ''
 }
 
 function addTransaction() {
+  categoryError.value = ''
   const description = form.description.trim()
   const category = form.category
   const amount = Number(form.amount)
-  if (!description || !category || Number.isNaN(amount)) return
+  if (!category) {
+    categoryError.value = 'Bitte eine Kategorie wählen.'
+    return
+  }
+  if (!description || Number.isNaN(amount)) return
 
   emit('add-transaction', {
     date: form.date,
@@ -86,6 +94,7 @@ function addTransaction() {
           <option value="">-- wählen --</option>
           <option v-for="c in categories" :key="c.id" :value="c.name">{{ c.name }}</option>
         </select>
+        <div v-if="categoryError" class="error" role="alert" aria-live="polite">{{ categoryError }}</div>
       </label>
       <button type="submit">Hinzufügen</button>
     </form>
