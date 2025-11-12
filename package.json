@@ -20,7 +20,7 @@
     ]
   },
   "scripts": {
-    "dev": "npm --prefix ./FinanceMaster run dev",
+    "dev": "npm --prefix ./FinanceMaster-frontend run dev",
     "test": "jest"
   },
   "devDependencies": {

@@ -16,6 +16,16 @@ body {
     color: var(--fg);
 }
 
+.nav {
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.spacer {
+  margin-left: auto;
+}
+
 .container {
     max-width: 720px;
     margin: 2rem auto;
@@ -49,7 +59,8 @@ h1, h2 { margin: 0 0 1rem; }
     gap: 0.5rem;
 }
 
-input {
+/* Unified form controls */
+input, select, textarea {
     flex: 1;
     padding: 0.6rem 0.8rem;
     border-radius: 8px;
@@ -69,12 +80,18 @@ button {
 }
 button:hover { filter: brightness(1.05); }
 
-.section-categories {
-  margin-bottom: 1.75rem;
+/* Sections share the same vertical rhythm */
+.section-categories,
+.section-transactions {
+  margin: 1.75rem 0;
 }
 
-.section-transactions {
-  margin-top: 1.75rem;
+.info {
+  color: #8ab4f8;
+}
+
+.muted {
+  color: var(--muted);
 }
 
 /* Transaction item layout */
@@ -108,9 +125,4 @@ button:hover { filter: brightness(1.05); }
   gap: 0.25rem;
 }
 
-.tx-form input, .tx-form select {
-  padding: 0.5rem 0.6rem;
-  border-radius: 6px;
-  border: 1px solid #243136;
-  background: #0b1113;
-}
+/* tx-form uses base controls now; no overrides needed */

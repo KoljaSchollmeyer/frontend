@@ -1,8 +1,9 @@
 <script setup>
 import { reactive, ref } from 'vue'
-import { apiPost } from '../api.js'
+import { createUser } from '../api.js'
+import ErrorBanner from './ErrorBanner.vue'
 
-const emit = defineEmits(['signed-up'])
+const emit = defineEmits(['signed-up', 'proceed-anonymous'])
 
 const form = reactive({
   name: '',
@@ -24,15 +25,19 @@ async function signup() {
     return
   }
   try {
-    await apiPost('/users', { name, email, password })
+    const created = await createUser({ name, email, password })
     success.value = true
-    emit('signed-up', { name, email })
+    emit('signed-up', created)
     form.name = ''
     form.email = ''
     form.password = ''
   } catch (e) {
     error.value = 'Registrierung fehlgeschlagen.'
   }
+}
+
+function proceedAnonymous() {
+  emit('proceed-anonymous')
 }
 </script>
 
@@ -54,14 +59,14 @@ async function signup() {
       </label>
       <button type="submit">Konto anlegen</button>
     </form>
-    <div v-if="error" class="error" role="alert">{{ error }}</div>
-    <div v-if="success" class="success" role="status">Erfolgreich registriert!</div>
+    <div style="margin-top:.75rem">
+      <button type="button" @click="proceedAnonymous">Als Gast fortfahren</button>
+    </div>
+    <ErrorBanner v-if="error" :message="error" />
+    <div v-if="success" class="info" role="status">Erfolgreich registriert!</div>
   </section>
 </template>
 
 <style scoped>
 .signup-form { display: flex; flex-direction: column; gap: .75rem; max-width: 320px; }
-.signup-form input { width: 100%; padding: .5rem; }
-.error { color: #b00020; margin-top: .5rem; }
-.success { color: #0a7f35; margin-top: .5rem; }
 </style>
