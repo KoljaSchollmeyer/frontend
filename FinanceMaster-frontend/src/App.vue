@@ -4,8 +4,9 @@ import CategoryList from './components/CategoryList.vue'
 import TransactionList from './components/TransactionList.vue'
 import ErrorBanner from './components/ErrorBanner.vue'
 import SignupForm from './components/SignupForm.vue'
+import LoginForm from './components/LoginForm.vue'
 import { getCurrentUser, setCurrentUser, clearCurrentUser } from './auth.js'
-import { getCategories as apiGetCategories, getTransactions as apiGetTransactions, createCategory as apiCreateCategory, createTransaction as apiCreateTransaction, createUser as apiCreateUser } from './api.js'
+import { apiGet, getCategories as apiGetCategories, getTransactions as apiGetTransactions, createCategory as apiCreateCategory, createTransaction as apiCreateTransaction, createUser as apiCreateUser } from './api.js'
 
 // Load data only from backend; no example data in FE
 const categories = ref([])
@@ -19,8 +20,9 @@ const errorTransactions = ref('')
 
 // current user and initial view
 const currentUser = ref(getCurrentUser())
-// simple view state: 'app' | 'signup' (default to signup if no user yet)
-const view = ref(currentUser.value ? 'app' : 'signup')
+// views: 'login' | 'signup' | 'app' (default to login if no user yet)
+const view = ref(currentUser.value ? 'app' : 'login')
+const authError = ref('')
 const isSignedIn = computed(() => !!currentUser.value?.id)
 const MISSING_USER_MSG = 'Bitte zuerst registrieren oder anmelden.'
 
@@ -54,15 +56,18 @@ async function fetchTransactions() {
 
 onMounted(async () => {
   if (isSignedIn.value) {
+    view.value = 'app'
     await fetchCategories()
     await fetchTransactions()
+  } else {
+    view.value = 'login'
   }
 })
 
 function addCategory(payload) {
   if (!isSignedIn.value) {
     errorCategories.value = MISSING_USER_MSG
-    view.value = 'signup'
+    view.value = 'login'
     return
   }
   // try to persist category on backend
@@ -95,7 +100,7 @@ async function addTransaction(payload) {
   } catch (e) {
     if (e && e.message === 'no-user') {
       errorTransactions.value = MISSING_USER_MSG
-      view.value = 'signup'
+      view.value = 'login'
       return
     }
     console.warn('Failed to save transaction to API', e)
@@ -111,33 +116,87 @@ function signedUp(user) {
   fetchTransactions()
 }
 
+function loggedIn(user) {
+  currentUser.value = user
+  setCurrentUser(user)
+  view.value = 'app'
+  fetchCategories()
+  fetchTransactions()
+}
+
 async function proceedAnonymous() {
   try {
-    const created = await apiCreateUser({ name: 'Gast', email: 'dummy@test.com', password: '12345' })
-    signedUp(created)
+    authError.value = ''
+    const GUEST_EMAIL = 'guest@financemaster.local'
+    const GUEST_NAME = 'Gast'
+    // Try to find existing guest user by email
+    const users = await apiGet('/users')
+    let guest = (users || []).find(u => (u.email || '').toLowerCase() === GUEST_EMAIL)
+    if (!guest) {
+      guest = await apiCreateUser({ name: GUEST_NAME, email: GUEST_EMAIL, password: '12345' })
+    }
+    signedUp(guest)
+    // Seed demo data for guest if empty
+    await seedGuestDataIfNeeded(guest.id)
   } catch (e) {
-    errorCategories.value = 'Gast-Anmeldung fehlgeschlagen.'
+    authError.value = 'Gast-Anmeldung fehlgeschlagen.'
+  }
+}
+
+async function seedGuestDataIfNeeded(userId) {
+  try {
+    await fetchCategories()
+    if (!categories.value.length) {
+      await apiCreateCategory({ name: 'Essen', description: 'Lebensmittel', userId })
+      await apiCreateCategory({ name: 'Gehalt', description: 'Monatlich', userId })
+      await fetchCategories()
+    }
+    await fetchTransactions()
+    if (!transactions.value.length && categories.value.length) {
+      const cat = categories.value[0]
+      const today = new Date().toISOString().slice(0,10)
+      await apiCreateTransaction({ type: 'income', amount: 1200, description: 'Demo-Gehalt', date: today, categoryId: cat.id, userId })
+      await fetchTransactions()
+    }
+  } catch (_) {
+    // best-effort seeding; ignore failures
   }
 }
 
 function logout() {
   clearCurrentUser()
   currentUser.value = null
-  view.value = 'signup'
+  view.value = 'login'
   categories.value = []
   transactions.value = []
+}
+
+function switchToSignup() {
+  authError.value = ''
+  view.value = 'signup'
 }
 </script>
 
 <template>
-  <nav class="nav">
-    <a href="#" @click.prevent="view = 'app'">App</a>
-    <a href="#" @click.prevent="view = 'signup'">Registrieren</a>
-    <span class="spacer" v-if="currentUser">
-      <button @click="logout">Logout</button>
-    </span>
-  </nav>
-  <main class="container" v-if="view === 'app'">
+  <div class="auth-wrapper" v-if="view === 'login' || view === 'signup'">
+    <div class="auth-card">
+      <LoginForm
+        v-if="view === 'login'"
+        :external-error="authError"
+        @logged-in="loggedIn"
+        @proceed-anonymous="proceedAnonymous"
+        @switch-to-signup="switchToSignup"
+      />
+      <SignupForm
+        v-else
+        :external-error="authError"
+        @signed-up="signedUp"
+        @proceed-anonymous="proceedAnonymous"
+      />
+    </div>
+  </div>
+
+  <main class="container" v-else-if="view === 'app'">
     <h1>Willkommen zu FinanceMaster<span v-if="currentUser?.name">, {{ currentUser.name }}</span>!</h1>
 
     <section class="section-categories">
@@ -158,7 +217,4 @@ function logout() {
       />
     </section>
   </main>
-  <div v-else-if="view === 'signup'">
-    <SignupForm @signed-up="signedUp" @proceed-anonymous="proceedAnonymous" />
-  </div>
 </template>

@@ -16,6 +16,54 @@ body {
     color: var(--fg);
 }
 
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+  padding: 1.5rem;
+}
+
+.auth-title {
+  margin: 0 0 1rem;
+  text-align: center;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+}
+
+.auth-form input,
+.auth-form select,
+.auth-form textarea {
+  width: 100%;
+}
+
+.auth-actions {
+  margin-top: .75rem;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  align-items: flex-start;
+}
+
 .nav {
   margin-bottom: 1rem;
   display: flex;
@@ -61,12 +109,11 @@ h1, h2 { margin: 0 0 1rem; }
 
 /* Unified form controls */
 input, select, textarea {
-    flex: 1;
-    padding: 0.6rem 0.8rem;
-    border-radius: 8px;
-    border: 1px solid #243136;
-    background: #0b1113;
-    color: var(--fg);
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #243136;
+  background: #0b1113;
+  color: var(--fg);
 }
 
 button {
