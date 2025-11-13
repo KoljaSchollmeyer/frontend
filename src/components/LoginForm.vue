@@ -67,7 +67,7 @@ function goSignup() {
         Kein Konto? <a href="#" @click.prevent="goSignup">Jetzt registrieren</a>
       </div>
       <div>
-        <a href="#" @click.prevent="proceedAnonymous">Als Gast fortfahren</a>
+        <a href="#" @click.prevent="proceedAnonymous">Ohne Konto fortfahren</a>
       </div>
     </div>
     <div v-if="error || props.externalError" class="error" role="alert" aria-live="polite">{{ error || props.externalError }}</div>

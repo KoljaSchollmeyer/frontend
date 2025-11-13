@@ -119,6 +119,16 @@ button {
 }
 button:hover { filter: brightness(1.05); }
 
+.btn-delete {
+    background: #ff6b6b;
+    color: #fff;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.7rem;
+}
+.btn-delete:hover {
+    background: #e74c3c;
+}
+
 /* Sections share the same vertical rhythm */
 .section-categories,
 .section-transactions {

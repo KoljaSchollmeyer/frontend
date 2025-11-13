@@ -2,12 +2,12 @@
 import { reactive, ref } from 'vue'
 
 const props = defineProps({ categories: Array, transactions: Array })
-const emit = defineEmits(['add-transaction'])
+const emit = defineEmits(['add-transaction', 'delete-transaction'])
 
 const form = reactive({
   date: new Date().toISOString().slice(0, 10),
   description: '',
-  categoryId: '', // holds selected category id
+  categoryId: '',
   type: 'expense',
   amount: ''
 })
@@ -44,6 +44,10 @@ function addTransaction() {
 
   resetForm()
 }
+
+function deleteTransaction(id) {
+  emit('delete-transaction', id)
+}
 </script>
 
 <template>
@@ -58,6 +62,7 @@ function addTransaction() {
           <div class="tx-category">{{ t.category }}</div>
         </div>
         <div class="tx-amount">{{ t.type === 'income' ? '+' : '-' }}{{ Number(t.amount).toFixed(2) }} €</div>
+        <button @click="deleteTransaction(t.id)" class="btn-delete">Löschen</button>
       </li>
     </ul>
 

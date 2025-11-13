@@ -6,24 +6,25 @@ import SignupForm from './components/SignupForm.vue'
 import LoginForm from './components/LoginForm.vue'
 import { getCurrentUser, setCurrentUser, clearCurrentUser } from './auth.js'
 import { apiGet, apiDelete, createCategory as apiCreateCategory, createTransaction as apiCreateTransaction, createUser as apiCreateUser } from './api.js'
-
-// Load data only from backend; no example data in FE
 const categories = ref([])
 const transactions = ref([])
 
-// loading and error state
 const loadingCategories = ref(false)
 const loadingTransactions = ref(false)
 const errorCategories = ref('')
 const errorTransactions = ref('')
 
-// current user and initial view
 const currentUser = ref(getCurrentUser())
-// views: 'login' | 'signup' | 'app' (default to login if no user yet)
 const view = ref(currentUser.value ? 'app' : 'login')
 const authError = ref('')
 const isSignedIn = computed(() => !!currentUser.value?.id)
-const MISSING_USER_MSG = 'Bitte zuerst registrieren oder anmelden.'
+
+const GUEST_EMAIL = 'dummy@test.com'
+function isGuestUser(user) {
+  if (!user) return false
+  const email = (user.email || '').toLowerCase()
+  return email === GUEST_EMAIL
+}
 
 async function fetchCategories() {
   loadingCategories.value = true
@@ -31,7 +32,7 @@ async function fetchCategories() {
   try {
     const userId = currentUser.value?.id
     const data = userId ? await apiGet(`/categories?userId=${encodeURIComponent(userId)}`) : []
-    categories.value = (data || []).map((c) => ({ id: c.id, name: c.name, description: c.description }))
+    categories.value = data.map((c) => ({ id: c.id, name: c.name, description: c.description }))
   } catch (err) {
     errorCategories.value = 'Kategorien konnten nicht geladen werden. Bitte später erneut versuchen.'
     categories.value = []
@@ -46,7 +47,7 @@ async function fetchTransactions() {
   try {
     const userId = currentUser.value?.id
     const tx = userId ? await apiGet(`/transactions?userId=${encodeURIComponent(userId)}`) : []
-    transactions.value = (tx || []).map((t) => ({ id: t.id, date: t.date, description: t.description, category: t.category?.name || t.category || '', type: t.type, amount: t.amount }))
+    transactions.value = tx.map((t) => ({ id: t.id, date: t.date, description: t.description, category: t.category?.name || t.category || '', type: t.type, amount: t.amount }))
   } catch (err) {
     errorTransactions.value = 'Transaktionen konnten nicht geladen werden. Bitte später erneut versuchen.'
     transactions.value = []
@@ -64,7 +65,7 @@ onMounted(async () => {
 
 async function addCategory(payload) {
   if (!isSignedIn.value) {
-    errorCategories.value = MISSING_USER_MSG
+    authError.value = 'Bitte zuerst registrieren oder anmelden.'
     view.value = 'login'
     return
   }
@@ -76,15 +77,23 @@ async function addCategory(payload) {
   }
 }
 
-async function addTransaction(payload) {
-  // POST to backend and update local list with returned entity; fallback to local push
+async function deleteCategory(id) {
+  if (!currentUser.value?.id) return
   try {
-    if (!isSignedIn.value) {
-      errorTransactions.value = MISSING_USER_MSG
-      view.value = 'login'
-      return
-    }
-    // Ensure backend receives a Category reference by id only
+    await apiDelete(`/categories/${id}?userId=${encodeURIComponent(currentUser.value.id)}`)
+    await fetchCategories()
+  } catch (_) {
+    errorCategories.value = 'Kategorie konnte nicht gelöscht werden.'
+  }
+}
+
+async function addTransaction(payload) {
+  if (!isSignedIn.value) {
+    authError.value = 'Bitte zuerst registrieren oder anmelden.'
+    view.value = 'login'
+    return
+  }
+  try {
     await apiCreateTransaction({
       type: payload.type,
       amount: payload.amount,
@@ -93,11 +102,19 @@ async function addTransaction(payload) {
       categoryId: payload.categoryId,
       userId: currentUser.value.id
     })
-    // re-fetch to ensure state matches server (ids, normalization)
     await fetchTransactions()
   } catch (e) {
-    console.warn('Failed to save transaction to API', e)
     errorTransactions.value = 'Transaktion konnte nicht gespeichert werden.'
+  }
+}
+
+async function deleteTransaction(id) {
+  if (!currentUser.value?.id) return
+  try {
+    await apiDelete(`/transactions/${id}?userId=${encodeURIComponent(currentUser.value.id)}`)
+    await fetchTransactions()
+  } catch (_) {
+    errorTransactions.value = 'Transaktion konnte nicht gelöscht werden.'
   }
 }
 
@@ -109,48 +126,17 @@ function signedUp(user) {
   fetchTransactions()
 }
 
-function loggedIn(user) {
-  // Reuse existing logic to avoid duplication
-  signedUp(user)
-}
-
-const GUEST_EMAIL = 'guest@financemaster.local'
-
 async function proceedAnonymous() {
   try {
     authError.value = ''
-    const GUEST_NAME = 'Gast'
-    // Try to find existing guest user by email
     const users = await apiGet('/users')
-    let guest = (users || []).find(u => (u.email || '').toLowerCase() === GUEST_EMAIL)
+    let guest = users.find(u => (u.email || '').toLowerCase() === GUEST_EMAIL)
     if (!guest) {
-      guest = await apiCreateUser({ name: GUEST_NAME, email: GUEST_EMAIL, password: '12345' })
+      guest = await apiCreateUser({ name: 'Gast', email: GUEST_EMAIL, password: '12345' })
     }
     signedUp(guest)
-    // Seed demo data for guest if empty
-    await seedGuestDataIfNeeded(guest.id)
   } catch (e) {
     authError.value = 'Gast-Anmeldung fehlgeschlagen.'
-  }
-}
-
-async function seedGuestDataIfNeeded(userId) {
-  try {
-    await fetchCategories()
-    if (!categories.value.length) {
-      await apiCreateCategory({ name: 'Essen', description: 'Lebensmittel', userId })
-      await apiCreateCategory({ name: 'Gehalt', description: 'Monatlich', userId })
-      await fetchCategories()
-    }
-    await fetchTransactions()
-    if (!transactions.value.length && categories.value.length) {
-      const cat = categories.value[0]
-      const today = new Date().toISOString().slice(0,10)
-      await apiCreateTransaction({ type: 'income', amount: 1200, description: 'Demo-Gehalt', date: today, categoryId: cat.id, userId })
-      await fetchTransactions()
-    }
-  } catch (_) {
-    // best-effort seeding; ignore failures
   }
 }
 
@@ -172,16 +158,12 @@ function switchToLogin() {
   view.value = 'login'
 }
 
-async function resetGuestView() {
+async function resetUserData() {
   if (!currentUser.value?.id) return
-  try {
-    await apiDelete(`/transactions?userId=${encodeURIComponent(currentUser.value.id)}`)
-    await apiDelete(`/categories?userId=${encodeURIComponent(currentUser.value.id)}`)
-    await fetchTransactions()
-    await fetchCategories()
-  } catch (_) {
-    errorTransactions.value = 'Gastansicht konnte nicht zurückgesetzt werden.'
-  }
+  await apiDelete(`/transactions?userId=${encodeURIComponent(currentUser.value.id)}`)
+  await apiDelete(`/categories?userId=${encodeURIComponent(currentUser.value.id)}`)
+  await fetchTransactions()
+  await fetchCategories()
 }
 </script>
 
@@ -191,7 +173,7 @@ async function resetGuestView() {
       <LoginForm
         v-if="view === 'login'"
         :external-error="authError"
-        @logged-in="loggedIn"
+        @logged-in="signedUp"
         @proceed-anonymous="proceedAnonymous"
         @switch-to-signup="switchToSignup"
       />
@@ -206,16 +188,21 @@ async function resetGuestView() {
   </div>
 
   <main class="container" v-else-if="view === 'app'">
-    <h1>Willkommen zu FinanceMaster<span v-if="currentUser?.name">, {{ currentUser.name }}</span>!</h1>
-    <div v-if="currentUser?.email === GUEST_EMAIL" style="margin: .5rem 0 1rem;">
-      <button @click="resetGuestView" style="background:#ff6b6b;color:#0b0f10">Gastansicht zurücksetzen</button>
+    <h1>Willkommen zu FinanceMaster!</h1>
+    <div class="muted" style="margin:.25rem 0 .75rem;">
+      <span v-if="isGuestUser(currentUser)">Du bist als Gast angemeldet.</span>
+      <span v-else>Angemeldet als: {{ currentUser?.email || currentUser?.name }}</span>
+      · <a href="#" @click.prevent="logout">Abmelden</a>
+    </div>
+    <div v-if="currentUser?.id" style="margin: .5rem 0 1rem;">
+      <button @click="resetUserData" style="background:#ff6b6b;color:#0b0f10">Alles löschen</button>
     </div>
 
     <section class="section-categories">
       <div v-if="loadingCategories" class="info">Lade Kategorien…</div>
   <div v-else-if="errorCategories" class="error" role="alert" aria-live="polite">{{ errorCategories }}</div>
-      <div v-else-if="!categories.length" class="muted">Keine Kategorien vorhanden – zuerst anlegen.</div>
-      <CategoryList :categories="categories" @add-category="addCategory" />
+      <div v-else-if="!categories.length" class="muted">Noch keine Kategorien.</div>
+      <CategoryList :categories="categories" @add-category="addCategory" @delete-category="deleteCategory" />
     </section>
 
     <section class="section-transactions">
@@ -226,6 +213,7 @@ async function resetGuestView() {
         :categories="categories"
         :transactions="transactions"
         @add-transaction="addTransaction"
+        @delete-transaction="deleteTransaction"
       />
     </section>
   </main>

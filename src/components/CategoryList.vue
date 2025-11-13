@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 defineProps({ categories: Array })
-const emit = defineEmits(['add-category'])
+const emit = defineEmits(['add-category', 'delete-category'])
 
 const newName = ref('')
 const newDescription = ref('')
@@ -14,6 +14,10 @@ function addCategory() {
   newName.value = ''
   newDescription.value = ''
 }
+
+function deleteCategory(id) {
+  emit('delete-category', id)
+}
 </script>
 
 <template>
@@ -24,6 +28,7 @@ function addCategory() {
       <li v-for="c in categories" :key="c.id" class="item">
         <div class="title">{{ c.name }}</div>
         <div class="desc">{{ c.description || ' ' }}</div>
+        <button @click="deleteCategory(c.id)" class="btn-delete">Löschen</button>
       </li>
     </ul>
 

@@ -59,7 +59,7 @@ function goLogin() {
       <button type="submit">Konto anlegen</button>
     </form>
     <div class="auth-actions">
-      <a href="#" @click.prevent="proceedAnonymous">Als Gast fortfahren</a>
+      <a href="#" @click.prevent="proceedAnonymous">Ohne Konto fortfahren</a>
       <div class="muted">
         Schon ein Konto? <a href="#" @click.prevent="goLogin">Jetzt anmelden</a>
       </div>
