@@ -42,18 +42,23 @@ export async function apiPost(path, body, opts = {}) {
     return res.json();
 }
 
+export async function apiDelete(path, opts = {}) {
+    const res = await fetch(`${API_BASE}${path}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+        credentials: opts.credentials || 'same-origin',
+        ...opts.fetchOptions
+    });
+    if (!res.ok) return throwApiError(res, 'DELETE', path);
+    return true;
+}
+
 // Specialized helpers
 export async function createUser({ name, email, password }) {
     return apiPost('/users', { name, email, password })
 }
 
-export async function getCategories() {
-    return apiGet('/categories')
-}
-
-export async function getTransactions() {
-    return apiGet('/transactions')
-}
+// Note: category/transaction GETs are called via apiGet with query strings directly
 
 export async function createCategory({ name, description, userId }) {
     return apiPost('/categories', { name, description, user: { id: userId } })
@@ -71,3 +76,5 @@ export async function createTransaction({ type, amount, description, date, categ
     }
     return apiPost('/transactions', body)
 }
+
+// Note: per-user DELETEs are invoked directly via apiDelete with query strings

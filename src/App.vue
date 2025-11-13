@@ -2,11 +2,10 @@
 import { ref, onMounted, computed } from 'vue'
 import CategoryList from './components/CategoryList.vue'
 import TransactionList from './components/TransactionList.vue'
-import ErrorBanner from './components/ErrorBanner.vue'
 import SignupForm from './components/SignupForm.vue'
 import LoginForm from './components/LoginForm.vue'
 import { getCurrentUser, setCurrentUser, clearCurrentUser } from './auth.js'
-import { apiGet, getCategories as apiGetCategories, getTransactions as apiGetTransactions, createCategory as apiCreateCategory, createTransaction as apiCreateTransaction, createUser as apiCreateUser } from './api.js'
+import { apiGet, apiDelete, createCategory as apiCreateCategory, createTransaction as apiCreateTransaction, createUser as apiCreateUser } from './api.js'
 
 // Load data only from backend; no example data in FE
 const categories = ref([])
@@ -30,7 +29,8 @@ async function fetchCategories() {
   loadingCategories.value = true
   errorCategories.value = ''
   try {
-    const data = await apiGetCategories()
+    const userId = currentUser.value?.id
+    const data = userId ? await apiGet(`/categories?userId=${encodeURIComponent(userId)}`) : []
     categories.value = (data || []).map((c) => ({ id: c.id, name: c.name, description: c.description }))
   } catch (err) {
     errorCategories.value = 'Kategorien konnten nicht geladen werden. Bitte später erneut versuchen.'
@@ -44,7 +44,8 @@ async function fetchTransactions() {
   loadingTransactions.value = true
   errorTransactions.value = ''
   try {
-    const tx = await apiGetTransactions()
+    const userId = currentUser.value?.id
+    const tx = userId ? await apiGet(`/transactions?userId=${encodeURIComponent(userId)}`) : []
     transactions.value = (tx || []).map((t) => ({ id: t.id, date: t.date, description: t.description, category: t.category?.name || t.category || '', type: t.type, amount: t.amount }))
   } catch (err) {
     errorTransactions.value = 'Transaktionen konnten nicht geladen werden. Bitte später erneut versuchen.'
@@ -55,36 +56,33 @@ async function fetchTransactions() {
 }
 
 onMounted(async () => {
-  if (isSignedIn.value) {
-    view.value = 'app'
-    await fetchCategories()
-    await fetchTransactions()
-  } else {
-    view.value = 'login'
+  view.value = isSignedIn.value ? 'app' : 'login'
+  if (view.value === 'app') {
+    await Promise.all([fetchCategories(), fetchTransactions()])
   }
 })
 
-function addCategory(payload) {
+async function addCategory(payload) {
   if (!isSignedIn.value) {
     errorCategories.value = MISSING_USER_MSG
     view.value = 'login'
     return
   }
-  // try to persist category on backend
-  apiCreateCategory({ name: payload.name, description: payload.description, userId: currentUser.value.id })
-    .then(async () => {
-      await fetchCategories()
-    })
-    .catch(() => {
-      errorCategories.value = 'Kategorie konnte nicht gespeichert werden.'
-    })
+  try {
+    await apiCreateCategory({ name: payload.name, description: payload.description, userId: currentUser.value.id })
+    await fetchCategories()
+  } catch (_) {
+    errorCategories.value = 'Kategorie konnte nicht gespeichert werden.'
+  }
 }
 
 async function addTransaction(payload) {
   // POST to backend and update local list with returned entity; fallback to local push
   try {
     if (!isSignedIn.value) {
-      throw new Error('no-user')
+      errorTransactions.value = MISSING_USER_MSG
+      view.value = 'login'
+      return
     }
     // Ensure backend receives a Category reference by id only
     await apiCreateTransaction({
@@ -98,11 +96,6 @@ async function addTransaction(payload) {
     // re-fetch to ensure state matches server (ids, normalization)
     await fetchTransactions()
   } catch (e) {
-    if (e && e.message === 'no-user') {
-      errorTransactions.value = MISSING_USER_MSG
-      view.value = 'login'
-      return
-    }
     console.warn('Failed to save transaction to API', e)
     errorTransactions.value = 'Transaktion konnte nicht gespeichert werden.'
   }
@@ -117,17 +110,15 @@ function signedUp(user) {
 }
 
 function loggedIn(user) {
-  currentUser.value = user
-  setCurrentUser(user)
-  view.value = 'app'
-  fetchCategories()
-  fetchTransactions()
+  // Reuse existing logic to avoid duplication
+  signedUp(user)
 }
+
+const GUEST_EMAIL = 'guest@financemaster.local'
 
 async function proceedAnonymous() {
   try {
     authError.value = ''
-    const GUEST_EMAIL = 'guest@financemaster.local'
     const GUEST_NAME = 'Gast'
     // Try to find existing guest user by email
     const users = await apiGet('/users')
@@ -175,6 +166,23 @@ function switchToSignup() {
   authError.value = ''
   view.value = 'signup'
 }
+
+function switchToLogin() {
+  authError.value = ''
+  view.value = 'login'
+}
+
+async function resetGuestView() {
+  if (!currentUser.value?.id) return
+  try {
+    await apiDelete(`/transactions?userId=${encodeURIComponent(currentUser.value.id)}`)
+    await apiDelete(`/categories?userId=${encodeURIComponent(currentUser.value.id)}`)
+    await fetchTransactions()
+    await fetchCategories()
+  } catch (_) {
+    errorTransactions.value = 'Gastansicht konnte nicht zurückgesetzt werden.'
+  }
+}
 </script>
 
 <template>
@@ -192,23 +200,27 @@ function switchToSignup() {
         :external-error="authError"
         @signed-up="signedUp"
         @proceed-anonymous="proceedAnonymous"
+        @switch-to-login="switchToLogin"
       />
     </div>
   </div>
 
   <main class="container" v-else-if="view === 'app'">
     <h1>Willkommen zu FinanceMaster<span v-if="currentUser?.name">, {{ currentUser.name }}</span>!</h1>
+    <div v-if="currentUser?.email === GUEST_EMAIL" style="margin: .5rem 0 1rem;">
+      <button @click="resetGuestView" style="background:#ff6b6b;color:#0b0f10">Gastansicht zurücksetzen</button>
+    </div>
 
     <section class="section-categories">
       <div v-if="loadingCategories" class="info">Lade Kategorien…</div>
-      <ErrorBanner v-else-if="errorCategories" :message="errorCategories" />
+  <div v-else-if="errorCategories" class="error" role="alert" aria-live="polite">{{ errorCategories }}</div>
       <div v-else-if="!categories.length" class="muted">Keine Kategorien vorhanden – zuerst anlegen.</div>
       <CategoryList :categories="categories" @add-category="addCategory" />
     </section>
 
     <section class="section-transactions">
       <div v-if="loadingTransactions" class="info">Lade Transaktionen…</div>
-      <ErrorBanner v-else-if="errorTransactions" :message="errorTransactions" />
+  <div v-else-if="errorTransactions" class="error" role="alert" aria-live="polite">{{ errorTransactions }}</div>
       <div v-else-if="!transactions.length" class="muted">Noch keine Transaktionen.</div>
       <TransactionList
         :categories="categories"

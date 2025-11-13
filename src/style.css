@@ -64,15 +64,7 @@ body {
   align-items: flex-start;
 }
 
-.nav {
-  margin-bottom: 1rem;
-  display: flex;
-  gap: 1rem;
-}
-
-.spacer {
-  margin-left: auto;
-}
+/* Removed legacy nav/spacer styles (no longer used) */
 
 .container {
     max-width: 720px;

@@ -1,29 +1,22 @@
 {
-  "name": "financemasterfrontende",
-  "version": "1.0.0",
-  "description": "Font End filmes of the FinanceMaster",
-  "homepage": "https://github.com/KoljaSchollmeyer/FinanceMasterFrontEnde#readme",
-  "bugs": {
-    "url": "https://github.com/KoljaSchollmeyer/FinanceMasterFrontEnde/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/KoljaSchollmeyer/FinanceMasterFrontEnde.git"
-  },
-  "license": "ISC",
-  "author": "Kolja Schollmeyer and Tomer Gonen",
-  "type": "commonjs",
-  "main": "index.js",
-  "jest": {
-    "testPathIgnorePatterns": [
-      "<rootDir>/vue-project/"
-    ]
+  "name": "financemaster",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
   },
   "scripts": {
-    "dev": "npm --prefix ./FinanceMaster-frontend run dev",
-    "test": "jest"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.5.22"
   },
   "devDependencies": {
-    "jest": "^30.2.0"
+    "@vitejs/plugin-vue": "^6.0.1",
+    "vite": "^7.1.11",
+    "vite-plugin-vue-devtools": "^8.0.3"
   }
 }

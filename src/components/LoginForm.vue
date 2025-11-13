@@ -1,6 +1,5 @@
 <script setup>
 import { reactive, ref } from 'vue'
-import ErrorBanner from './ErrorBanner.vue'
 import { apiGet } from '../api.js'
 
 const props = defineProps({ externalError: { type: String, default: '' } })
@@ -50,20 +49,20 @@ function goSignup() {
 </script>
 
 <template>
-  <section class="auth-card">
+  <section>
     <h2 class="auth-title">Anmelden</h2>
     <form @submit.prevent="login" class="auth-form">
       <label>
         E-Mail
-        <input v-model="form.email" type="email" placeholder="E-Mail" />
+        <input v-model.trim="form.email" type="email" placeholder="E-Mail" />
       </label>
       <label>
         Passwort
-        <input v-model="form.password" type="password" placeholder="Passwort" />
+        <input v-model.trim="form.password" type="password" placeholder="Passwort" />
       </label>
       <button type="submit" :disabled="loading">{{ loading ? 'Bitte warten…' : 'Anmelden' }}</button>
     </form>
-    <div class="auth-actions">
+  <div class="auth-actions">
       <div class="muted">
         Kein Konto? <a href="#" @click.prevent="goSignup">Jetzt registrieren</a>
       </div>
@@ -71,6 +70,6 @@ function goSignup() {
         <a href="#" @click.prevent="proceedAnonymous">Als Gast fortfahren</a>
       </div>
     </div>
-    <ErrorBanner v-if="error || props.externalError" :message="error || props.externalError" />
+    <div v-if="error || props.externalError" class="error" role="alert" aria-live="polite">{{ error || props.externalError }}</div>
   </section>
 </template>
