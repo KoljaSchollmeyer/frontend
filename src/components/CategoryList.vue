@@ -24,7 +24,8 @@ function deleteCategory(id) {
   <section class="section-categories">
     <h2>Meine Kategorien</h2>
 
-    <ul class="list">
+    <div v-if="!categories || categories.length === 0" class="muted">Noch keine Kategorien.</div>
+    <ul v-else class="list">
       <li v-for="c in categories" :key="c.id" class="item">
         <div class="title">{{ c.name }}</div>
         <div class="desc">{{ c.description || ' ' }}</div>

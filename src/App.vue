@@ -206,14 +206,17 @@ async function resetUserData() {
     <section class="section-categories">
       <div v-if="loadingCategories" class="info">Lade Kategorien…</div>
       <div v-else-if="errorCategories" class="error" role="alert" aria-live="polite">{{ errorCategories }}</div>
-      <div v-else-if="!categories.length" class="muted">Noch keine Kategorien.</div>
-      <CategoryList v-else :categories="categories" @add-category="addCategory" @delete-category="(id: number) => deleteItem('categories', id)" />
+      <CategoryList
+        v-else
+        :categories="categories"
+        @add-category="addCategory"
+        @delete-category="(id: number) => deleteItem('categories', id)"
+      />
     </section>
 
     <section class="section-transactions">
       <div v-if="loadingTransactions" class="info">Lade Transaktionen…</div>
       <div v-else-if="errorTransactions" class="error" role="alert" aria-live="polite">{{ errorTransactions }}</div>
-      <div v-else-if="!transactions.length" class="muted">Noch keine Transaktionen.</div>
       <TransactionList
         v-else
         :categories="categories"

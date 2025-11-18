@@ -54,7 +54,8 @@ function deleteTransaction(id) {
   <section>
     <h2>Meine Transaktionen</h2>
 
-    <ul class="list">
+    <div v-if="!transactions || transactions.length === 0" class="muted">Noch keine Transaktionen.</div>
+    <ul v-else class="list">
       <li v-for="t in transactions" :key="t.id" class="item">
         <div class="tx-left">
           <div class="tx-desc"><strong>{{ t.description }}</strong></div>
