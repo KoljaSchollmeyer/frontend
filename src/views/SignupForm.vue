@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, ref } from 'vue'
-import { createUser } from '../api.js'
+import { createUser } from '../services/httpClient.js'
 
 const props = defineProps({ externalError: { type: String, default: '' } })
 

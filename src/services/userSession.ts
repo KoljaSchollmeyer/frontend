@@ -1,4 +1,6 @@
-export function getCurrentUser() {
+import type { User } from '../types'
+
+export function getCurrentUser(): User | null {
   try {
     const stored = localStorage.getItem('currentUser')
     return stored ? JSON.parse(stored) : null
@@ -7,13 +9,13 @@ export function getCurrentUser() {
   }
 }
 
-export function setCurrentUser(user) {
+export function setCurrentUser(user: User): void {
   try {
     localStorage.setItem('currentUser', JSON.stringify(user))
   } catch {}
 }
 
-export function clearCurrentUser() {
+export function clearCurrentUser(): void {
   try {
     localStorage.removeItem('currentUser')
   } catch {}

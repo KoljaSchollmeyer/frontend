@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, ref } from 'vue'
-import { apiGet } from '../api.js'
+import { apiGet } from '../services/httpClient.js'
 
 const props = defineProps({ externalError: { type: String, default: '' } })
 const emit = defineEmits(['logged-in', 'proceed-anonymous', 'switch-to-signup'])
@@ -18,7 +18,7 @@ async function login() {
   loading.value = true
   try {
     const email = form.email.trim()
-    const password = form.password // currently not validated server-side
+    const password = form.password 
     if (!email || !password) {
       error.value = 'Bitte E-Mail und Passwort eingeben.'
       return
