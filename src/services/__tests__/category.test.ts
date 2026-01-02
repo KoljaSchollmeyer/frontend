@@ -35,13 +35,29 @@ describe('Category Integration Tests', () => {
 
     it('validates category name is required', async () => {
       // Kategorie ohne Name wird abgelehnt
+      const validCategory = {
+        name: 'Food',
+        description: 'Food and drinks',
+        user: { id: 1 }
+      }
+
       const invalidCategory = {
         name: '',
         description: 'Empty name',
         user: { id: 1 }
       }
 
-      mockApi.createCategory.mockRejectedValue(new Error('Category name is required'))
+      // First, create with valid name succeeds
+      mockApi.createCategory.mockResolvedValueOnce({
+        id: 10,
+        ...validCategory
+      })
+
+      const result = await mockApi.createCategory(validCategory)
+      expect(result.name).toBe('Food')
+
+      // Then, try with empty name fails
+      mockApi.createCategory.mockRejectedValueOnce(new Error('Category name is required'))
 
       await expect(mockApi.createCategory(invalidCategory)).rejects.toThrow('Category name is required')
     })
@@ -61,11 +77,20 @@ describe('Category Integration Tests', () => {
     it('prevents deletion of category with transactions', async () => {
       // Kategorie mit Transaktionen kann nicht gelöscht werden
       const categoryId = 3
-      const deleteCategory = vi.fn().mockRejectedValue(
+      
+      // Mock successful deletion of category without transactions
+      const deleteEmptyCategory = vi.fn().mockResolvedValue(undefined)
+      
+      // Delete empty category succeeds
+      await deleteEmptyCategory(5)
+      expect(deleteEmptyCategory).toHaveBeenCalledWith(5)
+
+      // Try to delete category that has transactions
+      const deleteCategoryWithTransactions = vi.fn().mockRejectedValue(
         new Error('Kategorie kann nicht gelöscht werden, weil sie noch Transaktionen hat.')
       )
 
-      await expect(deleteCategory(categoryId)).rejects.toThrow(
+      await expect(deleteCategoryWithTransactions(categoryId)).rejects.toThrow(
         'Kategorie kann nicht gelöscht werden, weil sie noch Transaktionen hat.'
       )
     })

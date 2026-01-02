@@ -38,6 +38,15 @@ describe('Transaction Integration Tests', () => {
 
     it('validates amount is positive', async () => {
       // Negative Beträge werden abgelehnt
+      const validExpense = {
+        type: 'expense',
+        amount: 50.00,
+        description: 'Valid',
+        date: '2025-12-28',
+        category: { id: 1 },
+        user: { id: 1 }
+      }
+
       const invalidExpense = {
         type: 'expense',
         amount: -10,
@@ -47,7 +56,17 @@ describe('Transaction Integration Tests', () => {
         user: { id: 1 }
       }
 
-      mockApi.createTransaction.mockRejectedValue(new Error('Amount must be positive'))
+      // First, create with positive amount succeeds
+      mockApi.createTransaction.mockResolvedValueOnce({
+        id: 100,
+        ...validExpense
+      })
+
+      const result = await mockApi.createTransaction(validExpense)
+      expect(result.amount).toBe(50.00)
+
+      // Then, try with negative amount fails
+      mockApi.createTransaction.mockRejectedValueOnce(new Error('Amount must be positive'))
 
       await expect(mockApi.createTransaction(invalidExpense)).rejects.toThrow('Amount must be positive')
     })

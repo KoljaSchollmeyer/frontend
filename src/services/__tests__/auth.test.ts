@@ -55,7 +55,7 @@ describe('Authentication Integration Tests', () => {
       // Registrierung mit ungültiger Email wird abgelehnt
       const invalidUser = {
         name: 'Test',
-        email: 'invalid-email',
+        email: 'invalid-emai',
         password: 'Test123!'
       }
 
@@ -66,15 +66,32 @@ describe('Authentication Integration Tests', () => {
 
     it('rejects registration with duplicate email', async () => {
       // Registrierung mit bereits existierender Email schlägt fehl
-      const duplicateUser = {
-        name: 'Existing',
-        email: 'existing@example.com',
+      const firstUser = {
+        name: 'First User',
+        email: 'duplicate@example.com',
         password: 'Pass123!'
       }
+      
+      const secondUser = {
+        name: 'Second User',
+        email: 'duplicate@example.com',  // Same email!
+        password: 'Different123!'
+      }
 
-      mockApi.createUser.mockRejectedValue(new Error('Email already exists'))
+      // First registration succeeds
+      mockApi.createUser.mockResolvedValueOnce({
+        id: 1,
+        name: firstUser.name,
+        email: firstUser.email
+      })
+      
+      const result1 = await mockApi.createUser(firstUser)
+      expect(result1.email).toBe('duplicate@example.com')
 
-      await expect(mockApi.createUser(duplicateUser)).rejects.toThrow('Email already exists')
+      // Second registration with same email fails
+      mockApi.createUser.mockRejectedValueOnce(new Error('Email already exists'))
+
+      await expect(mockApi.createUser(secondUser)).rejects.toThrow('Email already exists')
     })
   })
 
@@ -100,26 +117,42 @@ describe('Authentication Integration Tests', () => {
 
     it('rejects login with wrong password', async () => {
       // Login mit falschem Passwort wird abgelehnt
+      const correctCredentials = {
+        email: 'test@example.com',
+        password: 'correctpassword'
+      }
+
       const wrongCredentials = {
         email: 'test@example.com',
         password: 'wrongpassword'
       }
 
-      mockApi.loginUser.mockRejectedValue(new Error('Invalid credentials'))
+      // First, login with correct password succeeds
+      mockApi.loginUser.mockResolvedValueOnce({
+        id: 1,
+        name: 'Test User',
+        email: 'test@example.com'
+      })
+
+      const result = await mockApi.loginUser(correctCredentials)
+      expect(result.email).toBe('test@example.com')
+
+      // Then, login with wrong password fails
+      mockApi.loginUser.mockRejectedValueOnce(new Error('Invalid credentials'))
 
       await expect(mockApi.loginUser(wrongCredentials)).rejects.toThrow('Invalid credentials')
     })
 
     it('rejects login with non-existent email', async () => {
       // Login mit nicht existierender Email schlägt fehl
-      const credentials = {
+      const nonExistentCredentials = {
         email: 'nonexistent@example.com',
         password: 'password'
       }
 
       mockApi.loginUser.mockRejectedValue(new Error('User not found'))
 
-      await expect(mockApi.loginUser(credentials)).rejects.toThrow('User not found')
+      await expect(mockApi.loginUser(nonExistentCredentials)).rejects.toThrow('User not found')
     })
   })
 

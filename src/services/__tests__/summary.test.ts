@@ -53,18 +53,31 @@ describe('Summary Integration Tests', () => {
 
     it('fetches balance summary with category filter', async () => {
       // Balance wird für bestimmte Kategorie berechnet
-      mockApi.fetchBalanceSummary.mockResolvedValue({
+      // First fetch without filter
+      mockApi.fetchBalanceSummary.mockResolvedValueOnce({
+        income: 2500.00,
+        expense: 500.00,
+        balance: 2000.00
+      })
+
+      const fullBalance = await mockApi.fetchBalanceSummary({})
+      expect(fullBalance.expense).toBe(500.00)
+
+      // Then fetch with category filter shows different result
+      mockApi.fetchBalanceSummary.mockResolvedValueOnce({
         income: 0,
         expense: 45.50,
         balance: -45.50
       })
 
-      const balance = await mockApi.fetchBalanceSummary({
+      const filteredBalance = await mockApi.fetchBalanceSummary({
         categoryId: 1
       })
 
-      expect(mockApi.fetchBalanceSummary).toHaveBeenCalledWith({ categoryId: 1 })
-      expect(balance.expense).toBe(45.50)
+      expect(mockApi.fetchBalanceSummary).toHaveBeenLastCalledWith({ categoryId: 1 })
+      expect(filteredBalance.expense).toBe(45.50)
+      // Verify the filtered result is different
+      expect(filteredBalance.expense).toBeLessThan(fullBalance.expense)
     })
 
     it('returns zero balance with no transactions', async () => {
@@ -111,7 +124,14 @@ describe('Summary Integration Tests', () => {
 
     it('category summary shows transaction counts', async () => {
       // Anzahl der Transaktionen wird pro Kategorie angezeigt
-      mockApi.fetchCategorySummary.mockResolvedValue([
+      // First, fetch empty summary
+      mockApi.fetchCategorySummary.mockResolvedValueOnce([])
+
+      let summary = await mockApi.fetchCategorySummary({})
+      expect(summary).toEqual([])
+
+      // Then, after adding transactions, fetch shows counts
+      mockApi.fetchCategorySummary.mockResolvedValueOnce([
         {
           category: 'Groceries',
           income: 0,
@@ -121,9 +141,10 @@ describe('Summary Integration Tests', () => {
         }
       ])
 
-      const summary = await mockApi.fetchCategorySummary({})
+      summary = await mockApi.fetchCategorySummary({})
 
       expect(summary[0].count).toBe(5)
+      expect(summary[0].category).toBe('Groceries')
     })
 
     it('returns empty array with no categories', async () => {
@@ -165,7 +186,36 @@ describe('Summary Integration Tests', () => {
 
     it('date summary respects date range filter', async () => {
       // Summary respektiert Datumsbereich-Filter
-      mockApi.fetchDateSummary.mockResolvedValue([
+      // First, fetch all dates
+      mockApi.fetchDateSummary.mockResolvedValueOnce([
+        {
+          date: '2025-12-01',
+          income: 2500.00,
+          expense: 0,
+          balance: 2500.00,
+          count: 1
+        },
+        {
+          date: '2025-12-05',
+          income: 0,
+          expense: 45.00,
+          balance: -45.00,
+          count: 1
+        },
+        {
+          date: '2025-12-10',
+          income: 0,
+          expense: 100.00,
+          balance: -100.00,
+          count: 1
+        }
+      ])
+
+      let summary = await mockApi.fetchDateSummary({})
+      expect(summary).toHaveLength(3)
+
+      // Then, fetch with date range filter shows fewer results
+      mockApi.fetchDateSummary.mockResolvedValueOnce([
         {
           date: '2025-12-05',
           income: 0,
@@ -175,16 +225,17 @@ describe('Summary Integration Tests', () => {
         }
       ])
 
-      const summary = await mockApi.fetchDateSummary({
+      summary = await mockApi.fetchDateSummary({
         from: '2025-12-05',
         to: '2025-12-05'
       })
 
-      expect(mockApi.fetchDateSummary).toHaveBeenCalledWith({
+      expect(mockApi.fetchDateSummary).toHaveBeenLastCalledWith({
         from: '2025-12-05',
         to: '2025-12-05'
       })
       expect(summary).toHaveLength(1)
+      expect(summary[0].date).toBe('2025-12-05')
     })
 
     it('returns transactions sorted by date', async () => {

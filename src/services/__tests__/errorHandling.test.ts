@@ -17,7 +17,21 @@ describe('Error Handling Integration Tests', () => {
   describe('Use Case 17: Network Error Handling', () => {
     it('handles network errors gracefully', async () => {
       // Netzwerkfehler werden abgefangen
-      mockApi.loginUser.mockRejectedValue(new Error('Network error'))
+      // First, successful login
+      mockApi.loginUser.mockResolvedValueOnce({
+        id: 1,
+        name: 'Test User',
+        email: 'test@example.com'
+      })
+
+      const user = await mockApi.loginUser({
+        email: 'test@example.com',
+        password: 'correct'
+      })
+      expect(user).toBeDefined()
+
+      // Then, network error occurs on next call
+      mockApi.loginUser.mockRejectedValueOnce(new Error('Network error'))
 
       await expect(mockApi.loginUser({
         email: 'test@example.com',
@@ -29,7 +43,23 @@ describe('Error Handling Integration Tests', () => {
       // Fehlermeldungen werden dem User angezeigt
       const errorRef = ref('')
       
-      mockApi.createCategory.mockRejectedValue(new Error('Server error'))
+      // First, successful category creation
+      mockApi.createCategory.mockResolvedValueOnce({
+        id: 1,
+        name: 'Food',
+        description: 'Food items',
+        user: { id: 1 }
+      })
+
+      await mockApi.createCategory({
+        name: 'Food',
+        description: 'Food items',
+        user: { id: 1 }
+      })
+      expect(errorRef.value).toBe('')
+
+      // Then, server error occurs
+      mockApi.createCategory.mockRejectedValueOnce(new Error('Server error'))
 
       try {
         await mockApi.createCategory({
