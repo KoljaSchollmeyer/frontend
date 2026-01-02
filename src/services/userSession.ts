@@ -1,6 +1,6 @@
 import type { User } from '../types'
 
-export function getCurrentUser(): User | null {
+export const getCurrentUser = (): User | null => {
   try {
     const stored = localStorage.getItem('currentUser')
     return stored ? JSON.parse(stored) : null
@@ -9,14 +9,14 @@ export function getCurrentUser(): User | null {
   }
 }
 
-export function setCurrentUser(user: User): void {
-  try {
-    localStorage.setItem('currentUser', JSON.stringify(user))
-  } catch {}
+export const setCurrentUser = (user: User): void => {
+  try { localStorage.setItem('currentUser', JSON.stringify(user)) } catch {
+    // Ignore localStorage errors
+  }
 }
 
-export function clearCurrentUser(): void {
-  try {
-    localStorage.removeItem('currentUser')
-  } catch {}
+export const clearCurrentUser = (): void => {
+  try { localStorage.removeItem('currentUser') } catch {
+    // Ignore localStorage errors
+  }
 }

@@ -20,5 +20,5 @@ export interface Transaction {
   amount: number
   categoryId: number
   userId: number
+  category?: string  // For display purposes (category name)
 }
-

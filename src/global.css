@@ -64,8 +64,6 @@ body {
   align-items: flex-start;
 }
 
-/* Removed legacy nav/spacer styles (no longer used) */
-
 .container {
     max-width: 720px;
     margin: 2rem auto;
@@ -143,6 +141,24 @@ button:hover { filter: brightness(1.05); }
   color: var(--muted);
 }
 
+/* Category item layout */
+.category-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.category-info .title {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.category-info .desc {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 /* Transaction item layout */
 .tx-left {
   display: flex;
@@ -175,3 +191,197 @@ button:hover { filter: brightness(1.05); }
 }
 
 /* tx-form uses base controls now; no overrides needed */
+
+/* ============================================================================
+   DASHBOARD LAYOUT
+   ============================================================================ */
+.dashboard {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #0d1117;
+}
+
+.dashboard-header {
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  padding: 1rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.dashboard-main {
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 2rem;
+}
+
+.dashboard-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+/* ============================================================================
+   HEADERS & TYPOGRAPHY
+   ============================================================================ */
+.form-header {
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: #e8eaed;
+  font-weight: 600;
+}
+
+.welcome-greeting h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.user-email {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* ============================================================================
+   ERROR & ALERT MESSAGES
+   ============================================================================ */
+.error-message,
+.error {
+  padding: 0.8rem;
+  background: rgba(248, 81, 73, 0.15);
+  border: 1px solid rgba(248, 81, 73, 0.3);
+  border-radius: 6px;
+  color: #f85149;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+/* ============================================================================
+   FILTER CONTROLS
+   ============================================================================ */
+.filter-bar {
+  background: rgba(22, 27, 34, 0.6);
+  border: 1px solid #2b3a47;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.filter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #8b949e;
+  margin-bottom: 0.75rem;
+}
+
+.filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* ============================================================================
+   SUMMARY & ANALYTICS
+   ============================================================================ */
+.summary {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #0f1419 0%, #1a252f 100%);
+  border-radius: 0.6rem;
+  border: 1px solid #2b3a47;
+}
+
+.summary h2 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.6rem;
+  color: #fff;
+  font-weight: 700;
+}
+
+.balance-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.balance-card {
+  background: rgba(22, 27, 34, 0.5);
+  border: 1px solid #2b3a47;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.balance-card.income {
+  border-left: 4px solid #2ecc71;
+}
+
+.balance-card.expense {
+  border-left: 4px solid #ff6b6b;
+}
+
+.balance-label {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.balance-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* ============================================================================
+   CHARTS
+   ============================================================================ */
+.chart-card {
+  background: #161b22;
+  border: 1px solid #2b3a47;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  color: #e8eaed;
+}
+
+.chart-card h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.chart-wrapper {
+  position: relative;
+  height: 280px;
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+@media (max-width: 1024px) {
+  .dashboard-sections {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    padding: 1rem;
+  }
+
+  .dashboard-main {
+    padding: 1rem;
+  }
+
+  .login-container {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}

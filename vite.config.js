@@ -6,7 +6,7 @@ import vue from '@vitejs/plugin-vue'
 // Only load vue-devtools in dev to avoid SSR/localStorage issues during CI builds
 export default defineConfig(async ({ command }) => {
   const plugins = [vue()]
-  if (command === 'serve') {
+  if (command === 'serve' && !process.env.VITEST) {
     const { default: vueDevTools } = await import('vite-plugin-vue-devtools')
     plugins.push(vueDevTools())
   }

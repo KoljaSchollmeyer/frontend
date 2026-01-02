@@ -7,14 +7,20 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
-.DS_Store
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Build outputs
 dist
 dist-ssr
+.vite
 coverage
 *.local
 
-# Editor directories and files
+# IDE & Editor
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -23,14 +29,27 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
 
+# TypeScript
 *.tsbuildinfo
-
 .eslintcache
 
-# Cypress
+# Test & Dev
+__screenshots__/
 /cypress/videos/
 /cypress/screenshots/
 
-# Vitest
-__screenshots__/
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
