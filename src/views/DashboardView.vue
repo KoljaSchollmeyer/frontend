@@ -3,7 +3,6 @@ import { ref, computed, onMounted } from 'vue'
 import CategoryList from '../components/CategoryList.vue'
 import TransactionList from '../components/TransactionList.vue'
 import Summary from '../components/Summary.vue'
-import TransactionsChart from '../components/TransactionsChart.vue'
 import { useAuth } from '../composables/useAuth'
 import { useCategories } from '../composables/useCategories'
 import { useTransactions } from '../composables/useTransactions'
@@ -42,6 +41,7 @@ async function loadAllData() {
     categories.error.value = 'Fehler beim Laden der Daten. Bitte versuchen Sie es später erneut.'
   }
 }
+
 
 async function addCategory(payload: Pick<Category, 'name' | 'description'>) {
   if (!userId.value) {
@@ -95,6 +95,8 @@ async function deleteTransaction(transactionId: number) {
 
 function updateSummaryFilter(next: { categoryId?: number; from?: string; to?: string; timeMode: 'all' | 'range' }) {
   summaryFilter.value = { ...summaryFilter.value, ...next }
+  transactionsFilter.value = { ...summaryFilter.value } // Sync Filter
+  loadTransactionsWithFilter()
 }
 
 async function updateTransactionsFilter(next: { categoryId?: number; from?: string; to?: string; timeMode: 'all' | 'range' }) {
@@ -185,8 +187,6 @@ async function addSeedData() {
           :filter="summaryFilter"
           @update:filter="updateSummaryFilter"
         />
-
-        <TransactionsChart :transactions="transactions.list.value" :filter="summaryFilter" />
       </div>
     </main>
 

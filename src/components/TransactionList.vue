@@ -80,9 +80,9 @@ function deleteTransaction(id: number) {
     <ul v-else class="list">
       <li v-for="t in transactions" :key="t.id" class="item">
         <div class="tx-left">
-          <div class="tx-desc"><strong>{{ t.description }}</strong></div>
+          <div class="tx-desc"><strong>{{ t.description || 'Keine Beschreibung' }}</strong></div>
+          <div class="tx-category">{{ t.category.name }}</div>
           <div class="tx-date">{{ formatDate(t.date) }}</div>
-          <div class="tx-category">{{ t.category }}</div>
         </div>
         <div class="tx-amount">{{ t.type === 'income' ? '+' : '-' }}{{ formatCurrency(t.amount).replace('€', '').trim() }} €</div>
         <button @click="deleteTransaction(t.id)" class="btn-delete">Löschen</button>

@@ -57,7 +57,8 @@ const filteredTransactions = computed(() => {
 
 const monthBuckets = computed(() => {
   const keys = new Set<string>()
-  filteredTransactions.value.forEach(tx => {
+  // Use ALL transactions to determine buckets, not filtered ones
+  props.transactions.forEach(tx => {
     if (!tx?.date) return
     const d = new Date(tx.date)
     if (Number.isNaN(d.getTime())) return
@@ -107,7 +108,7 @@ const chartData = computed(() => {
       }
     })
     incomePerMonth.push(Number(income.toFixed(2)))
-    expensePerMonth.push(Number(expense.toFixed(2)))
+    expensePerMonth.push(-Number(expense.toFixed(2))) // Negativ für Ausgaben
   })
 
   return {
@@ -116,12 +117,16 @@ const chartData = computed(() => {
       {
         label: 'Einnahmen',
         data: incomePerMonth,
-        backgroundColor: 'rgba(46, 204, 113, 0.7)'
+        backgroundColor: 'rgba(46, 204, 113, 0.8)', // Grün
+        borderColor: 'rgba(46, 204, 113, 1)',
+        borderWidth: 1
       },
       {
         label: 'Ausgaben',
         data: expensePerMonth,
-        backgroundColor: 'rgba(231, 76, 60, 0.7)'
+        backgroundColor: 'rgba(231, 76, 60, 0.8)', // Rot
+        borderColor: 'rgba(231, 76, 60, 1)',
+        borderWidth: 1
       }
     ]
   }
@@ -152,8 +157,9 @@ const options = computed(() => ({
     tooltip: {
       callbacks: {
         label: (ctx: unknown) => {
-          const context = ctx as { dataset: { label: string }; formattedValue: string }
-          return `${context.dataset.label}: ${context.formattedValue} €`
+          const context = ctx as { dataset: { label: string }; parsed: { y: number } }
+          const value = Math.abs(context.parsed.y) // Absoluter Wert für Tooltip
+          return `${context.dataset.label}: ${value.toFixed(2)} €`
         }
       }
     }
@@ -164,7 +170,13 @@ const options = computed(() => ({
       grid: { color: 'rgba(255, 255, 255, 0.08)' }
     },
     y: {
-      ticks: { color: '#c9d1d9' },
+      ticks: { 
+        color: '#c9d1d9',
+        callback: (value: unknown) => {
+          const num = value as number
+          return Math.abs(num).toFixed(0) + ' €' // Absoluter Wert auf Y-Achse
+        }
+      },
       grid: { color: 'rgba(255, 255, 255, 0.08)' }
     }
   }
