@@ -1,36 +1,28 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
+# Abhängigkeiten (Niemals hochladen, sind riesig)
 node_modules
-.DS_Store
+.pnpm-store
+
+# Build-Artefakte (Werden generiert)
 dist
 dist-ssr
 coverage
-*.local
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Systemdateien
+.DS_Store
+Thumbs.db
 .idea
+.vscode
 *.suo
-*.ntvs*
+*.ntvs
 *.njsproj
 *.sln
-*.sw?
 
-*.tsbuildinfo
-
-.eslintcache
-
-# Cypress
-/cypress/videos/
-/cypress/screenshots/
-
-# Vitest
-__screenshots__/
+# Lokale Environment Variablen (Sicherheit!)
+.env
+.env.local
+.env.*.local

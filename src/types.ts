@@ -1,24 +1,34 @@
-export interface User {
+export interface Transaction {
   id: number
-  name: string
-  email: string
-  password?: string
+  description: string
+  amount: number
+  type: 'income' | 'expense'
+  date: string
+  categoryId: number
+  categoryName: string
 }
 
 export interface Category {
   id: number
   name: string
-  description: string
-  userId: number
+  description?: string
 }
 
-export interface Transaction {
+export interface User {
   id: number
-  date: string
-  description: string
-  type: 'income' | 'expense'
-  amount: number
-  categoryId: number
-  userId: number
+  name: string
+  email: string
 }
 
+export interface Balance {
+  totalIncome: number
+  totalExpense: number
+  balance: number
+}
+
+export interface Filter {
+  timeMode: 'all' | 'range'
+  from?: string
+  to?: string
+  categoryId?: number
+}

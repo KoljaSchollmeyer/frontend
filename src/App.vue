@@ -1,229 +1,108 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import CategoryList from './components/CategoryList.vue'
-import TransactionList from './components/TransactionList.vue'
-import SignupForm from './views/SignupForm.vue'
-import LoginForm from './views/LoginForm.vue'
-import { getCurrentUser, setCurrentUser, clearCurrentUser } from './services/userSession'
-import { apiGet, apiDelete, createCategory as apiCreateCategory, createTransaction as apiCreateTransaction, createUser as apiCreateUser } from './services/httpClient'
-import type { User, Category, Transaction, CategoryPayload, TransactionPayload } from './types'
+import { onMounted } from 'vue'
+import { store } from './stores/financeStore'
+import LoginView from './views/LoginView.vue'
+import DashboardView from './views/DashboardView.vue'
 
-const categories = ref<Category[]>([])
-const transactions = ref<Transaction[]>([])
-
-const loadingCategories = ref(false)
-const loadingTransactions = ref(false)
-const errorCategories = ref('')
-const errorTransactions = ref('')
-
-const currentUser = ref<User | null>(getCurrentUser())
-const view = ref<'login' | 'signup' | 'app'>(currentUser.value ? 'app' : 'login')
-const authError = ref('')
-const isSignedIn = computed(() => !!currentUser.value?.id)
-
-const GUEST_EMAIL = 'dummy@test.com'
-function isGuestUser(user: User | null): boolean {
-  return user?.email.toLowerCase() === GUEST_EMAIL
-}
-
-// Generische Ladefunktion für verschiedene Datentypen
-async function loadData(type: 'categories' | 'transactions') {
-  if (type === 'categories') {
-    loadingCategories.value = true
-    errorCategories.value = ''
-    try {
-      const userId = currentUser.value?.id
-      const data = userId ? await apiGet<any[]>(`/categories?userId=${encodeURIComponent(userId)}`) : []
-      categories.value = data.map(c => ({ id: c.id, name: c.name, description: c.description }))
-    } catch (err) {
-      errorCategories.value = 'Kategorien konnten nicht geladen werden. Bitte später erneut versuchen.'
-      categories.value = []
-    } finally {
-      loadingCategories.value = false
-    }
-  } else {
-    loadingTransactions.value = true
-    errorTransactions.value = ''
-    try {
-      const userId = currentUser.value?.id
-      const data = userId ? await apiGet<any[]>(`/transactions?userId=${encodeURIComponent(userId)}`) : []
-      transactions.value = data.map(t => ({ 
-        id: t.id, 
-        date: t.date, 
-        description: t.description, 
-        category: t.category?.name || t.category || '', 
-        type: t.type, 
-        amount: t.amount 
-      }))
-    } catch (err) {
-      errorTransactions.value = 'Transaktionen konnten nicht geladen werden. Bitte später erneut versuchen.'
-      transactions.value = []
-    } finally {
-      loadingTransactions.value = false
-    }
-  }
-}
-
-async function loadAllData() {
-  await Promise.all([loadData('categories'), loadData('transactions')])
-}
-
-// Helper: Build URL with userId query parameter
-function buildUserUrl(path: string) {
-  return `${path}?userId=${encodeURIComponent(currentUser.value!.id)}`
-}
-
-// Helper: Check auth before mutation operations
-function requireAuth() {
-  if (!isSignedIn.value) {
-    authError.value = 'Bitte zuerst registrieren oder anmelden.'
-    view.value = 'login'
-    return false
-  }
-  return true
-}
-
-onMounted(() => {
-  if (isSignedIn.value) loadAllData()
-})
-
-async function addCategory(payload: CategoryPayload) {
-  if (!requireAuth() || !currentUser.value) return
-  try {
-    await apiCreateCategory({ ...payload, userId: currentUser.value.id })
-    await loadData('categories')
-  } catch (_) {
-    errorCategories.value = 'Kategorie konnte nicht gespeichert werden.'
-  }
-}
-
-async function addTransaction(payload: TransactionPayload) {
-  if (!requireAuth() || !currentUser.value) return
-  try {
-    await apiCreateTransaction({ ...payload, userId: currentUser.value.id })
-    await loadData('transactions')
-  } catch (e) {
-    errorTransactions.value = 'Transaktion konnte nicht gespeichert werden.'
-  }
-}
-
-// Generische Delete-Funktion
-async function deleteItem(type: 'categories' | 'transactions', id: number) {
-  if (!currentUser.value?.id) return
-  
-  const config = {
-    categories: {
-      endpoint: '/categories',
-      errorRef: errorCategories,
-      errorMsg: 'Kategorie konnte nicht gelöscht werden.'
-    },
-    transactions: {
-      endpoint: '/transactions',
-      errorRef: errorTransactions,
-      errorMsg: 'Transaktion konnte nicht gelöscht werden.'
-    }
-  }
-
-  const cfg = config[type]
-  if (!cfg) return
-
-  try {
-    await apiDelete(buildUserUrl(`${cfg.endpoint}/${id}`))
-    await loadData(type)
-  } catch (_) {
-    cfg.errorRef.value = cfg.errorMsg
-  }
-}
-
-function signedUp(user: User) {
-  currentUser.value = user
-  setCurrentUser(user)
-  view.value = 'app'
-  loadAllData()
-}
-
-async function proceedAnonymous() {
-  try {
-    authError.value = ''
-    const users = await apiGet<User[]>('/users')
-    let guest = users.find(u => (u.email || '').toLowerCase() === GUEST_EMAIL)
-    if (!guest) {
-      guest = await apiCreateUser({ name: 'Gast', email: GUEST_EMAIL, password: '12345' })
-    }
-    signedUp(guest)
-  } catch (e) {
-    authError.value = 'Gast-Anmeldung fehlgeschlagen.'
-  }
-}
-
-function logout() {
-  clearCurrentUser()
-  currentUser.value = null
-  view.value = 'login'
-  categories.value = []
-  transactions.value = []
-}
-
-async function resetUserData() {
-  if (!currentUser.value?.id) return
-  await apiDelete(buildUserUrl('/transactions'))
-  await apiDelete(buildUserUrl('/categories'))
-  await loadAllData()
-}
+/**
+ * Initialisiert die App beim Laden und prüft auf eine bestehende Session.
+ */
+onMounted(() => store.init())
 </script>
 
 <template>
-  <div class="auth-wrapper" v-if="view === 'login' || view === 'signup'">
-    <div class="auth-card">
-      <LoginForm
-        v-if="view === 'login'"
-        :external-error="authError"
-        @logged-in="signedUp"
-        @proceed-anonymous="proceedAnonymous"
-        @switch-to-signup="() => { authError = ''; view = 'signup' }"
-      />
-      <SignupForm
-        v-else
-        :external-error="authError"
-        @signed-up="signedUp"
-        @proceed-anonymous="proceedAnonymous"
-        @switch-to-login="() => { authError = ''; view = 'login' }"
-      />
+  <main>
+    <Teleport to="body">
+      <div v-if="store.error" class="error-toast">
+        <div class="error-content">
+          <span class="error-text">{{ store.error }}</span>
+          <button class="close-btn" @click="store.error = null" aria-label="Schließen">
+            ×
+          </button>
+        </div>
+      </div>
+    </Teleport>
+    
+    <div v-if="!store.user">
+      <LoginView />
     </div>
-  </div>
-
-  <main class="container" v-else-if="view === 'app'">
-    <h1>Willkommen zu FinanceMaster!</h1>
-    <div class="muted" style="margin:.25rem 0 .75rem;">
-      <span v-if="isGuestUser(currentUser)">Du bist als Gast angemeldet.</span>
-      <span v-else>Angemeldet als: {{ currentUser?.name }}</span>
-      · <a href="#" @click.prevent="logout">Abmelden</a>
+    <div v-else>
+      <DashboardView />
     </div>
-    <div v-if="currentUser?.id" style="margin: .5rem 0 1rem;">
-      <button @click="resetUserData" style="background:#ff6b6b;color:#0b0f10">Alles löschen</button>
-    </div>
-
-    <section class="section-categories">
-      <div v-if="loadingCategories" class="info">Lade Kategorien…</div>
-      <div v-else-if="errorCategories" class="error" role="alert" aria-live="polite">{{ errorCategories }}</div>
-      <CategoryList
-        v-else
-        :categories="categories"
-        @add-category="addCategory"
-        @delete-category="(id: number) => deleteItem('categories', id)"
-      />
-    </section>
-
-    <section class="section-transactions">
-      <div v-if="loadingTransactions" class="info">Lade Transaktionen…</div>
-      <div v-else-if="errorTransactions" class="error" role="alert" aria-live="polite">{{ errorTransactions }}</div>
-      <TransactionList
-        v-else
-        :categories="categories"
-        :transactions="transactions"
-        @add-transaction="addTransaction"
-        @delete-transaction="(id: number) => deleteItem('transactions', id)"
-      />
-    </section>
   </main>
 </template>
+
+<style>
+/* Globales Styling für den Error-Toast.
+  Nutzt position: fixed, um immer im Sichtfeld des Nutzers zu bleiben.
+*/
+.error-toast {
+  position: fixed;
+  top: 30px; 
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center; /* Zentriert die Fehlermeldung horizontal */
+  z-index: 10000;
+  pointer-events: none; /* Verhindert, dass der Container Klicks blockiert */
+}
+
+.error-content {
+  pointer-events: auto; /* Aktiviert Klicks für die Box selbst */
+  background-color: #dc2626;
+  color: white;
+  padding: 14px 24px;
+  border-radius: 50px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  
+  /* Zentralisierung: Begrenzt die Breite, damit es nicht zu lang wird */
+  max-width: 600px; 
+  width: auto;
+  min-width: 300px;
+  
+  /* Animation beim Erscheinen */
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.error-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center; /* Text innerhalb der Box zentrieren */
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+  padding: 0;
+}
+
+.close-btn:hover {
+  opacity: 1;
+}
+
+/* Animation: Fährt sanft von oben ein */
+@keyframes slideDown {
+  0% { 
+    transform: translateY(-50px);
+    opacity: 0; 
+  }
+  100% { 
+    transform: translateY(0); 
+    opacity: 1; 
+  }
+}
+</style>
