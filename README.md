@@ -1,11 +1,12 @@
 # FinanceMaster
 
-**WebTech WiSe25/26 – Gruppenarbeit**  
+**WebTech WiSe25/26 – Gruppenarbeit**
+
 Team: Tomer Gonen, Kolja Schollmeyer
 
-Eine Web-App zur Verwaltung von Einnahmen und Ausgaben mit Kategorisierung und Finanzübersicht.
+Eine Web-App zur Verwaltung von Einnahmen und Ausgaben mit Kategorisierung, Fremdwährungs-Support und Finanzübersicht.
 
-## Links
+## 🔗 Links
 
 - **Backend Repository**: https://github.com/tomergonen2002/FinanceMaster
 - **Frontend Repository**: https://github.com/KoljaSchollmeyer/frontend
@@ -14,9 +15,11 @@ Eine Web-App zur Verwaltung von Einnahmen und Ausgaben mit Kategorisierung und F
 - **Lokal Frontend**: http://localhost:5173/
 - **Lokal Backend**: http://localhost:8080/
 
-## Installation und Lokale Entwicklung
+
+## 🚀 Installation und Lokale Entwicklung
 
 ### Backend starten
+Voraussetzung: Java 25 JDK installiert.
 
 ```bash
 cd FinanceMaster
@@ -24,6 +27,7 @@ cd FinanceMaster
 ```
 
 ### Frontend starten
+Voraussetzung: Node.js 20+ installiert.
 
 ```bash
 cd frontend
@@ -31,91 +35,173 @@ npm install
 VITE_API_URL=http://localhost:8080 npm run dev
 ```
 
-## App nutzen (Kurzanleitung)
+## 📸 Anwendungsfälle (Use Cases)
 
-### 1) Start & Anmeldung
+Die folgende Dokumentation demonstriert die zentralen Funktionen der Anwendung.
 
-- Öffne das Frontend (lokal oder live):
-  - Lokal: http://localhost:5173/
-  - Live: https://frontend-7vbb.onrender.com
-- Registriere dich über **Neues Konto** oder melde dich über **Anmelden** an.
-- Die App nutzt eine **Session (HttpOnly-Cookie)**. Nach der Anmeldung bleibt man eingeloggt, bis man **Abmelden** ausführt.
-- Tipp: Nutze nach dem ersten Login den Button **Beispieldaten**, um die App sofort mit Test-Kategorien und zeitlich verteilten Transaktionen zu füllen.
+### 1. Authentifizierung & Session-Management
+Nutzer können ein Konto erstellen und sich anmelden. Nach dem Login gelangen sie auf das Dashboard, wo oben rechts die **Abmelden-Taste** zur Verfügung steht (sicherer Session-Logout).
 
-### 2) Dark Mode
+<table>
+  <tr>
+    <td width="50%">
+      <h4 align="center">Registrieren</h4>
+      <img src="docs/Neues Konto.png" alt="Registrieren UI" width="100%">
+    </td>
+    <td width="50%">
+      <h4 align="center">Anmelden</h4>
+      <img src="docs/Anmelden.png" alt="Login UI" width="100%">
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <h4 align="center">Dashboard (mit Abmelden)</h4>
+      <img src="docs/DashboardView.png" alt="Dashboard Header" width="100%">
+    </td>
+    <td width="50%">
+      <h4 align="center">Logout Request (200 OK)</h4>
+      <img src="docs/auth_logout.png" alt="Logout Network" width="100%">
+    </td>
+  </tr>
+</table>
 
-- Über den Sonne/Mond-Switch kannst du jederzeit zwischen Light und Dark Mode wechseln.
+### 2. Finanzübersicht
+Das System berechnet automatisch die Summen aller Einnahmen und Ausgaben sowie die resultierende Bilanz basierend auf den aktuellen Daten.
 
-### 3) Kategorien verwalten
+<div align="center">
+  <img src="docs/Beispieldaten_1.png" alt="Finanzübersicht Bilanz" width="800">
+</div>
 
-- Lege Kategorien an (z.B. Lebensmittel, Miete, Gehalt).
-- Kategorien können nur gelöscht werden, wenn **keine Transaktionen** mehr daran hängen.
+### 3. Kategorien verwalten
+Nutzer können eigene Kategorien anlegen. Das System schützt die Datenintegrität: Kategorien, die bereits verwendet werden, können nicht gelöscht werden.
 
-### 4) Transaktionen erfassen
+<table>
+  <tr>
+    <td width="50%">
+      <h4 align="center">Kategorie-Liste</h4>
+      <img src="docs/Beispieldaten_2.png" alt="Kategorien Liste" width="100%">
+    </td>
+    <td width="50%">
+      <h4 align="center">Lösch-Schutz (Fehler)</h4>
+      <img src="docs/Kategorie_Loeschen_Fehler.png" alt="Fehler beim Löschen" width="100%">
+    </td>
+  </tr>
+</table>
 
-- Erfasse Einnahmen oder Ausgaben mit:
-  - Typ (**Einnahme** / **Ausgabe**)
-  - Betrag
-  - Datum
-  - Kategorie
-  - optionaler Beschreibung
-- **Währungsumrechnung**: Bei Auswahl einer Fremdwährung (USD, GBP, etc.) wird automatisch der historische Wechselkurs zum gewählten Datum geladen und der Gegenwert in Euro gespeichert.
-- Transaktionen können einzeln gelöscht werden.
+### 4. Transaktionen verwalten
+Robuste Erfassung von Buchungen. Das System validiert Eingaben visuell (fehlender Betrag oder Kategorie) und bestätigt erfolgreiche Einträge.
 
-### 5) Filtern & Finanzübersicht
+<table>
+  <tr>
+    <td width="50%">
+      <h4 align="center">Fehler: Betrag fehlt</h4>
+      <img src="docs/Ohne_Betrag.png" alt="Validierung Betrag" width="100%">
+    </td>
+    <td width="50%">
+      <h4 align="center">Fehler: Kategorie fehlt</h4>
+      <img src="docs/Ohne_Kategorie.png" alt="Validierung Kategorie" width="100%">
+    </td>
+  </tr>
+</table>
+<div align="center">
+  <h4>Erfolgreich gespeicherte Transaktion</h4>
+  <img src="docs/Neue_Transaktion.png" alt="Transaktion gespeichert" width="800">
+</div>
 
-- In der **Liste** der Transaktionen kannst du filtern, um gezielt bestimmte Buchungen in der Liste zu suchen oder zu bearbeiten.
-- In der **Übersicht** siehst du:
-  - Summe **Einnahmen**, Summe **Ausgaben**
-  - **Bilanz** (= Einnahmen − Ausgaben)
-  - Aufschlüsselungen nach Kategorie bzw. Datum (je nach Ansicht)
+### 5. Fremdwährungen
+Die App unterstützt diverse Währungen (USD, GBP, JPY, etc.) via externer API. Der Wechselkurs wird live geladen und der Euro-Wert automatisch berechnet.
 
-## Datenbankmodell (Übersicht)
+<table>
+  <tr>
+    <td width="50%">
+      <h4 align="center">Eingabe Fremdwährung</h4>
+      <img src="docs/Neue_Transaktion_USD.png" alt="USD Eingabe" width="100%">
+    </td>
+    <td width="50%">
+      <h4 align="center">Auto-Wechselkurs</h4>
+      <img src="docs/Neue_Transaktion_Wechselkus.png" alt="Wechselkurs Detail" width="100%">
+    </td>
+  </tr>
+</table>
+
+### 6. Beispieldaten Generierung
+Über den Button "Beispieldaten" können neue Nutzer das System sofort mit Testdaten füllen, um Funktionen wie Filterung und Bilanzierung zu testen.
+
+<table>
+  <tr>
+    <td width="50%">
+      <h4 align="center">Generierte Transaktionen</h4>
+      <img src="docs/Beispieldaten_1.png" alt="Generierte Daten Liste" width="100%">
+    </td>
+    <td width="50%">
+      <h4 align="center">Generierte Kategorien</h4>
+      <img src="docs/Beispieldaten_2.png" alt="Generierte Daten Kategorien" width="100%">
+    </td>
+  </tr>
+</table>
+
+### 7. Filterung
+Die Transaktionsliste lässt sich dynamisch nach Zeiträumen und Kategorien filtern.
+
+<table>
+  <tr>
+    <td width="33%">
+      <h4 align="center">Filter: Kategorie</h4>
+      <img src="docs/Filter_nach_Kategorie.png" alt="Filter Kategorie" width="100%">
+    </td>
+    <td width="33%">
+      <h4 align="center">Filter: Zeitraum</h4>
+      <img src="docs/Filter_nach_Zeitraum.png" alt="Filter Zeit" width="100%">
+    </td>
+    <td width="33%">
+      <h4 align="center">Kombination</h4>
+      <img src="docs/Filter_nach_Kategorie_und_Zeitraum.png" alt="Kombi Filter" width="100%">
+    </td>
+  </tr>
+</table>
+
+### Extra: Dark Mode
+<div align="center">
+  <img src="docs/Darkmode.png" alt="Dark Mode" width="800">
+</div>
+
+---
+
+## 🧪 Test-Dokumentation & Qualitätssicherung
+
+Das Projekt verfügt über eine umfassende Testabdeckung mit insgesamt **30 automatisierten Tests**.
+
+### 1. Backend Tests (Spring Boot Integration)
+Die Tests validieren die API-Endpunkte, die Datenbank-Integrität und die Sicherheitsmechanismen (Isolation).
+
+**Ausführen:** `./gradlew test`
+
+### 2. Frontend Tests (Vitest & Vue Test Utils)
+Die Tests prüfen die UI-Logik, den State-Store (Pinia) und die API-Fehlerbehandlung.
+
+**Ausführen:** `npm test`
+
+
+## 💾 Datenbankmodell
 
 Das relationale Modell besteht aus drei Tabellen und ihren Beziehungen:
-
-- `users`: Benutzerkonto (inkl. `password_hash`)
-- `categories`: Kategorien pro Benutzer (`categories.user_id → users.id`)
-- `transactions`: Transaktionen mit Kategorie & Benutzer (`transactions.category_id → categories.id`, `transactions.user_id → users.id`)
+- `users`: Benutzerkonto
+- `categories`: Kategorien (gehören einem User)
+- `transactions`: Buchungen (gehören User + Kategorie)
 
 <div align="center">
   <img src="docs/db-diagram.png" alt="Relationales DB-Modell" width="720" />
 </div>
 
+## 🛡️ Sicherheit und Architektur
 
-## Deployment auf Render
+### Sicherheitsmaßnahmen
+- **Passwörter:** Werden sicher mit BCrypt gehasht.
+- **Authentifizierung:** Session-basiert mit HttpOnly-Cookies (kein Zugriff via JavaScript möglich).
+- **CORS:** Konfiguriert, um nur Anfragen vom Frontend zuzulassen.
+- **User-Isolation:** Strenge Trennung der Daten. Jeder Controller prüft bei jedem Request, ob die angefragte Ressource tatsächlich dem eingeloggten User gehört.
 
-### Benötigte Umgebungsvariablen (Backend Service)
-
-```
-DB_NAME=financemaster_database
-DB_PASSWORD=...
-FRONTEND_URL=https://frontend-7vbb.onrender.com
-```
-
-### Tests ausführen
-
-**Backend**:
-```bash
-cd FinanceMaster
-./gradlew clean test build --no-daemon
-```
-
-**Frontend**:
-```bash
-cd frontend
-npm test
-```
-
-## Sicherheit und Architektur
-
-### Sicherheitsmassnahmen
-
-- Passwoerter werden mit BCrypt gehasht
-- Session-basierte Authentifizierung mit HttpSession
-- Datenbank-Credentials über Umgebungsvariablen
-- CORS-Konfiguration für sichere Cross-Origin-Requests
-- User-Isolation: Strenge Trennung der Daten zwischen verschiedenen Usern
-  - Jeder User sieht nur seine Kategorien
-  - Jeder User sieht nur seine Transaktionen
-  - Backend validiert User-Zugehörigkeit bei jedem Request
+### Deployment (Render)
+Benötigte Umgebungsvariablen:
+- `DB_NAME`, `DB_PASSWORD`, `DB_USER`
+- `FRONTEND_URL` (für CORS)
